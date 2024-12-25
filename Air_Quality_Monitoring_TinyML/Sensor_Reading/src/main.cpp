@@ -6,10 +6,9 @@
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <Adafruit_Sensor.h>
-//#include <DHT.h>
 #include <WiFi.h>
 #include<math.h>
-//#include<ThingSpeak.h>
+
 
 #define Vcc 3.3    // Supply Voltage.
 #define ADC 4095   //Max ADC value.
@@ -19,17 +18,14 @@
 #define Co2_a 116.6020682  //Coefficients for CO2 sensor calculation.
 #define Co2_b -2.769034857
 #define Co2_SensorPin 34   //Analog pin for Co2 sensor.
-#define Co2_rZero 84    // R0 calculated from previois step.
+#define Co2_rZero 150    // R0 calculated from previois step.
 
 #define CO_CleanAir_ratio 6.5 
 #define CO_a 2990886.965       //Coefficients for CO sensor calculation.
 #define CO_b -7.358
 #define CO_SensorPin 35       //Analog pin for CO sensor.
-#define CO_rZero 33        //R0 calculated from previous step.
+#define CO_rZero 25        //R0 calculated from previous step.
 
-//#define DHT_PIN 5        //Digital pin for DHT-11 sensor
-
-//DHT dht(DHT_PIN, DHT11);  // Create Instance of the DHT-11 sensor
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -49,15 +45,15 @@ double sigmoid(double x) {
 int predict_air_quality(double co, double co2) {
     // Weight matrix and bias values from your logistic regression model
     double weights[5][2] = {
-        {-2.11130717, -0.02267492},
-        {-0.90566874, -0.00308743},
-        { 0.13311002,  0.0097678},
-        {1.15271109,  0.00769154},
-        {1.73115465,  0.00830161}
+        {-2.89816820e+00, -4.50445018e-03},
+        {-1.20248152e+00,  1.54909277e-03},
+        { 1.75399142e-01,  4.11911887e-04},
+        {1.43475368e+00,  6.60195577e-04},
+        {2.49049689e+00,  1.88325005e-03}
     };
     double biases[5] = {
-        21.84339371,   9.70670356,  -2.92515529,  -9.55599913,
-       -19.06894285
+        15.87637661,   9.93527529,   3.66143994,  -6.60829904,
+       -22.8647928
     };
 
     // Calculate probabilities for each air quality class
@@ -92,7 +88,7 @@ void show_prediction(int air_quality){
     case 1:
         //printf("MODERATE");
         display.setTextSize(2);
-        display.setCursor(35,45);
+        display.setCursor(20,45);
         display.print("MODERATE");
         break;
     case 2:
@@ -104,13 +100,13 @@ void show_prediction(int air_quality){
     case 3:
         //printf("UNHEALTHY");
         display.setTextSize(2);
-        display.setCursor(30,45);
+        display.setCursor(15,45);
         display.print("UNHEALTHY");
         break;
     case 4:
         //printf("HAZARDOUS");
         display.setTextSize(2);
-        display.setCursor(30,45);
+        display.setCursor(25,45);
         display.print("HAZARDOUS");
         break;
     default:
@@ -141,7 +137,6 @@ float get_CO_PPM(float rs, float rz){
   return ppm;
 }
 
-
 #define WiFi_timeOut 20000   
 
 /*Declare Wifi Credentials*/
@@ -149,12 +144,6 @@ const char* SSID = "LOVE U 3000";
 const char* PASSWORD = "AVATARRR";
 
 WiFiClient client;
-
-
-/*Declare ThingSpeak Channel Credentials*/
-/*unsigned long  CHANNEL_ID = 2592404;
-const char* CHANNEL_API_KEY = "KX0W99E3IUXJ0BNI";*/
-
 
 /*intialize WiFi connection*/
 
@@ -179,17 +168,12 @@ void WiFi_connect(){
   }
 }
 
-
-
 void setup(){
 
   Serial.begin(9600); //Initializes serial communication.
 
-  //dht.begin(); //Begins DHT sensor.
-
   WiFi_connect(); // Connects to the specified WiFi network.
-  //ThingSpeak.begin(client); // Connect to ThingSpeak Server
-
+  
   pinMode(Co2_SensorPin,INPUT); //Sets up sensor pins as inputs.
   pinMode(CO_SensorPin,INPUT);
 
@@ -219,33 +203,30 @@ int currentMinute= timeClient.getMinutes();
 display.clearDisplay();
 
 //Time
-  /*display.setTextSize(1);
-  display.setCursor(50,0);
-  display.print(currentHour);*/
-  display.setTextSize(1);
-  display.setCursor(62,0);
-  display.print(":");
-  display.setTextSize(1);
-  display.setCursor(68,0);
-  display.print(currentMinute);
 
   if(currentHour >= 00 && currentHour <12){
     display.setTextSize(1);
-    display.setCursor(50,0);
+    display.setCursor(40,0);
     display.print(currentHour);
     display.setTextSize(1);
-    display.setCursor(85,0);
+    display.setCursor(75,0);
     display.print("AM");
     }
   else if(currentHour >= 12){
     display.setTextSize(1);
-    display.setCursor(50,0);
+    display.setCursor(40,0);
     display.print(currentHour-12);
     display.setTextSize(1);
-    display.setCursor(85,0);
+    display.setCursor(75,0);
     display.print("PM");
     }
 
+  display.setTextSize(1);
+  display.setCursor(52,0);
+  display.print(":");
+  display.setTextSize(1);
+  display.setCursor(58,0);
+  display.print(currentMinute);
 
 //Date
   time_t epochTime = timeClient.getEpochTime();
@@ -263,26 +244,22 @@ display.clearDisplay();
 
   String currentDate = String(MonthDay) + "-" + String(currentMonth) + "-" + String(currentYear);
 
-
   display.setTextSize(1);
-  display.setCursor(15,9);
+  display.setCursor(20,9);
   display.print(Weekday);
   display.setTextSize(1);
   display.setCursor(55,9);
   display.print(currentDate);
-
+  
 float Co2_rResis=0.0;
 float CO_rResis=0.0;
 
-/*Temperature, humidity, CO, and CO2 sensor values.*/
+/*CO, and CO2 sensor values.*/
 float Co2_SensorVal = analogRead(Co2_SensorPin);
 Co2_rResis = getRs(Co2_SensorVal);
 
 float CO_SensorVal = analogRead(CO_SensorPin);
 CO_rResis = getRs(CO_SensorVal);
-
-//float h = dht.readHumidity();
-//float t = dht.readTemperature();
 
 /*Calculates CO and CO2 PPM.*/
 float Co2_PPM = get_Co2_PPM(Co2_rResis, Co2_rZero);
@@ -290,21 +267,13 @@ float CO_PPM = get_CO_PPM(CO_rResis, CO_rZero);
 
 int air_quality = predict_air_quality(CO_PPM, Co2_PPM);
 
-
 /*Prints sensor data to serial monitor.*/
-/*Serial.print("Temperature : ");
-Serial.print(t);
-Serial.println(" °C");
 
-Serial.print("Humidity : ");
-Serial.print(h);
-Serial.println(" %");*/
-
-/*Serial.print("Co2_PM: ");
+Serial.print("Co2_PM: ");
 Serial.println(Co2_PPM);
 
 Serial.print("CO_PPM: ");
-Serial.println(CO_PPM);*/
+Serial.println(CO_PPM);
 
   display.setTextSize(1);
   display.setCursor(0,25);
@@ -315,25 +284,17 @@ Serial.println(CO_PPM);*/
   display.print(Co2_PPM);
 
   display.setTextSize(1);
-  display.setCursor(75,25);
+  display.setCursor(65,25);
   display.print("CO: ");
 
   display.setTextSize(1);
-  display.setCursor(100,25);
+  display.setCursor(85,25);
   display.print(CO_PPM);
 
   show_prediction(air_quality);
 
 display.display();
 
-delay(1000);
+delay(2000);
 
-/*Sends data to ThingSpeak.*/
-/*ThingSpeak.setField(1,t);
-ThingSpeak.setField(2,h);
-ThingSpeak.setField(3,Co2_PPM);
-ThingSpeak.setField(4,CO_PPM);
-ThingSpeak.writeFields(CHANNEL_ID, CHANNEL_API_KEY);*/
-
-//delay(10000);
 }
