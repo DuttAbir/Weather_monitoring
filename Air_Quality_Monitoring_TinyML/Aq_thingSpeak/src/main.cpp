@@ -2,6 +2,8 @@
 #include<WiFi.h>
 #include<math.h>
 #include<ThingSpeak.h>
+/*Including header containing passwords and api keys*/
+#include"C:\Users\dutta\Documents\Arduino\Weather_Monitoring\Air_Quality_Monitoring_TinyML\info.h"
 
 #define Vcc 3.3    // Supply Voltage.
 #define ADC 4095   //Max ADC value.
@@ -40,15 +42,15 @@ float get_CO_PPM(float rs, float rz){
 #define WiFi_timeOut 20000   
 
 /*Declare Wifi Credentials*/
-const char* SSID = "POCO M3";
-const char* PASSWORD = "12345678";
+const char* SSID = ssid();
+const char* PASSWORD = Pass();
 
 WiFiClient client;
 
 
 /*Declare ThingSpeak Channel Credentials*/
-unsigned long  CHANNEL_ID = 2777464;
-const char* CHANNEL_API_KEY = "Y44Y0E8WVEE9ILQJ";
+unsigned long  CHANNEL_ID = channelID();
+const char* CHANNEL_API_KEY = writeAPIkey();
 
 
 /*intialize WiFi connection*/

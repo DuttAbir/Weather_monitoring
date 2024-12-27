@@ -8,6 +8,8 @@
 #include <Adafruit_Sensor.h>
 #include <WiFi.h>
 #include<math.h>
+/*Including header containing passwords*/
+#include"C:\Users\dutta\Documents\Arduino\Weather_Monitoring\Air_Quality_Monitoring_TinyML\info.h"
 
 
 #define Vcc 3.3    // Supply Voltage.
@@ -140,8 +142,8 @@ float get_CO_PPM(float rs, float rz){
 #define WiFi_timeOut 20000   
 
 /*Declare Wifi Credentials*/
-const char* SSID = "LOVE U 3000";
-const char* PASSWORD = "AVATARRR";
+const char* SSID = ssid();
+const char* PASSWORD = Pass();
 
 WiFiClient client;
 
